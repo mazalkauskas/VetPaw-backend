@@ -1,45 +1,24 @@
 const express = require('express');
-const Joi = require('joi');
 const mySQL = require('mysql2/promise');
 const bcrypt = require('bcrypt');
 const jsonwebtoken = require('jsonwebtoken');
-
+const validation = require('../../middleware/validation');
 const { mysqlConfig, jwtSecret } = require('../../config');
+const { registerSchema, loginSchema } = require('../../middleware/validationSchemas/authVerification');
 
 const router = express.Router();
 
-const userSchema = Joi.object({
-  name: Joi.string().trim().required(),
-  email: Joi.string().email().lowercase().trim().required(),
-  password: Joi.string().required(),
-});
-
-const userLoginSchema = Joi.object({
-  email: Joi.string().email().lowercase().trim().required(),
-  password: Joi.string().required(),
-});
-
-router.post('/register', async (req, res) => {
-  let userDetails;
+router.post('/register', validation(registerSchema), async (req, res) => {
   try {
-    userDetails = await userSchema.validateAsync(req.body);
-  } catch (err) {
-    console.log(err);
-    return res.status(400).send({ err: 'Incorrect data passed' });
-  }
-
-  try {
-    const hash = bcrypt.hashSync(userDetails.password, 10);
-
+    const hash = bcrypt.hashSync(req.body.password, 10);
     const con = await mySQL.createConnection(mysqlConfig);
     const [data] = await con.execute(`
     INSERT INTO users (name, email, password)
-    VALUES (${mySQL.escape(userDetails.name)}, ${mySQL.escape(userDetails.email)}, '${hash}' )
+    VALUES (${mySQL.escape(req.body.name)}, ${mySQL.escape(req.body.email)}, '${hash}' )
     `);
     await con.end();
 
-    if (!data.insertId || data.affectedRows !== 1) {
-      console.log(data);
+    if (!data.insertId) {
       return res.status(500).send({ err: 'Server issue occured. Please try again later' });
     }
 
@@ -50,10 +29,10 @@ router.post('/register', async (req, res) => {
   }
 });
 
-router.post('/login', async (req, res) => {
+router.post('/login', validation(loginSchema), async (req, res) => {
   let userDetails;
   try {
-    userDetails = await userLoginSchema.validateAsync(req.body);
+    userDetails = await req.body.validateAsync(req.body);
   } catch (err) {
     console.log(err);
     return res.status(400).send({ err: 'Incorrect data passed' });
