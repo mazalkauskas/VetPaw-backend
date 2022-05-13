@@ -2,8 +2,9 @@ const express = require('express');
 const Joi = require('joi');
 const mySQL = require('mysql2/promise');
 const bcrypt = require('bcrypt');
+const jsonwebtoken = require('jsonwebtoken');
 
-const { mysqlConfig } = require('../../config');
+const { mysqlConfig, jwtSecret } = require('../../config');
 
 const router = express.Router();
 
