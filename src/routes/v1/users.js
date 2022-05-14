@@ -6,12 +6,13 @@ const passwordGenerator = require('generate-password');
 const fetch = require('node-fetch');
 const isLoggedIn = require('../../middleware/auth');
 const validation = require('../../middleware/validation');
-const { mysqlConfig, jwtSecret, mailServer, mailServerPassword } = require('../../config');
+const { mySQLConfig, jwtSecret, mailServer, mailServerPassword } = require('../../config');
 const {
   registerSchema,
   loginSchema,
   changePasswordSchema,
   resetPasswordSchema,
+  newPasswordSchema,
 } = require('../../middleware/validationSchemas/authVerification');
 
 const router = express.Router();
@@ -19,7 +20,7 @@ const router = express.Router();
 router.post('/register', validation(registerSchema), async (req, res) => {
   try {
     const hash = bcrypt.hashSync(req.body.password, 10);
-    const con = await mySQL.createConnection(mysqlConfig);
+    const con = await mySQL.createConnection(mySQLConfig);
     const [data] = await con.execute(`
     INSERT INTO users (name, email, password)
     VALUES (${mySQL.escape(req.body.name)}, ${mySQL.escape(req.body.email)}, '${hash}' )
@@ -39,9 +40,9 @@ router.post('/register', validation(registerSchema), async (req, res) => {
 
 router.post('/login', validation(loginSchema), async (req, res) => {
   try {
-    const con = await mySQL.createConnection(mysqlConfig);
+    const con = await mySQL.createConnection(mySQLConfig);
     const [data] = await con.execute(`
-    SELECT id, email, password 
+    SELECT id, password 
     FROM users
     WHERE email = ${mySQL.escape(req.body.email)}
     LIMIT 1
@@ -67,7 +68,7 @@ router.post('/login', validation(loginSchema), async (req, res) => {
 
 router.post('/change-password', isLoggedIn, validation(changePasswordSchema), async (req, res) => {
   try {
-    const con = await mySQL.createConnection(mysqlConfig);
+    const con = await mySQL.createConnection(mySQLConfig);
     const [data] = await con.execute(`
     SELECT  password
     FROM users WHERE id = ${mySQL.escape(req.user.accountId)}
@@ -95,22 +96,30 @@ router.post('/change-password', isLoggedIn, validation(changePasswordSchema), as
   }
 });
 
-router.post('/reset-password', isLoggedIn, validation(resetPasswordSchema), async (req, res) => {
+router.post('/reset-password', validation(resetPasswordSchema), async (req, res) => {
   try {
-    const randomPassword = passwordGenerator.generate({
+    const con = await mySQL.createConnection(mySQLConfig);
+    const [data1] = await con.execute(`SELECT id FROM users WHERE email = ${mySQL.escape(req.body.email)} LIMIT 1`);
+
+    if (data1.length !== 1) {
+      await con.end();
+      return res.send({ msg: 'If your email is correct, you will shortly get a email' });
+    }
+
+    const randomCode = passwordGenerator.generate({
       length: 10,
       numbers: true,
     });
-    const passwordHash = bcrypt.hashSync(randomPassword, 10);
 
-    const con = await mySQL.createConnection(mysqlConfig);
-    const [data] = await con.execute(`
-    UPDATE users SET password = ${mySQL.escape(passwordHash)} WHERE email = ${mySQL.escape(req.body.email)}
+    const [data2] = await con.execute(`
+    INSERT INTO passwordreset (email, code)
+    VALUES (${mySQL.escape(req.body.email)}, '${randomCode}' )
     `);
+
     await con.end();
 
-    if (!data.affectedRows) {
-      return res.status(500).send({ err: 'Server issue occured. Please try again later' });
+    if (!data2.insertId) {
+      return res.status(500).send({ msg: 'Server issue occured. Please try again later' });
     }
 
     const response = await fetch(mailServer, {
@@ -118,14 +127,62 @@ router.post('/reset-password', isLoggedIn, validation(resetPasswordSchema), asyn
       body: JSON.stringify({
         password: mailServerPassword,
         email: req.body.email,
-        message: `Your new password is ${randomPassword}`,
+        message: `If you requested for a new password, please visit this link:
+      http://localhost:8080/v1/users/new-password?email=${encodeURI(req.body.email)}&token=${randomCode}
+    }}`,
       }),
       headers: { 'Content-Type': 'application/json' },
     });
     const json = await response.json();
-    console.log(json.info);
 
-    return res.send({ msg: `New password has been sent to ${req.body.email}` });
+    if (!json.info) {
+      return res.status(500).send({ msg: 'Server issue occured. Please try again later' });
+    }
+
+    return res.send({ msg: 'If your email is correct, you will shortly get a message' });
+  } catch (err) {
+    console.log(err);
+    return res.status(500).send({ msg: 'Server issue occured. Please try again later' });
+  }
+});
+
+router.post('/new-password', validation(newPasswordSchema), async (req, res) => {
+  try {
+    const con = await mySQL.createConnection(mySQLConfig);
+    const [data] = await con.execute(`
+    SELECT * FROM passwordreset WHERE email = ${mySQL.escape(req.body.email)} 
+    AND code = ${mySQL.escape(req.body.token)} LIMIT 1
+    `);
+
+    if (data.length !== 1) {
+      await con.end();
+      return res.status(400).send({ msg: 'Invalid change password request. Please try again' });
+    }
+
+    if ((new Date().getTime() - new Date(data[0].created_at).getTime()) / 60000 > 300) {
+      await con.end();
+      return res.status(400).send({ msg: 'Invalid change password request. Please try again2' });
+    }
+
+    const hashedPassword = bcrypt.hashSync(req.body.password, 10);
+
+    const [changeResponse] = await con.execute(`
+    UPDATE users SET password = ${mySQL.escape(hashedPassword)}
+    WHERE email = ${mySQL.escape(req.body.email)}
+    `);
+
+    if (!changeResponse.affectedRows) {
+      await con.end();
+      return res.status(500).send({ msg: 'Server issue occured. Please try again later' });
+    }
+
+    await con.execute(`
+    DELETE FROM passwordreset
+    WHERE id = ${data[0].id}
+    `);
+
+    await con.end();
+    return res.send({ msg: 'Password changed request completed' });
   } catch (err) {
     console.log(err);
     return res.status(500).send({ msg: 'Server issue occured. Please try again later' });
