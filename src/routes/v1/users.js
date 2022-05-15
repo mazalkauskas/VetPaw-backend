@@ -127,9 +127,8 @@ router.post('/reset-password', validation(resetPasswordSchema), async (req, res)
       body: JSON.stringify({
         password: mailServerPassword,
         email: req.body.email,
-        message: `If you requested for a new password, please visit this link:
-      http://localhost:8080/v1/users/new-password?email=${encodeURI(req.body.email)}&token=${randomCode}
-    }}`,
+        message: `Your password reset code is: ${randomCode}
+        If you didn't request a password reset, please ignore this letter.`,
       }),
       headers: { 'Content-Type': 'application/json' },
     });
@@ -156,12 +155,12 @@ router.post('/new-password', validation(newPasswordSchema), async (req, res) => 
 
     if (data.length !== 1) {
       await con.end();
-      return res.status(400).send({ msg: 'Invalid change password request. Please try again' });
+      return res.status(400).send({ err: 'Invalid change password request. Please try again' });
     }
 
     if ((new Date().getTime() - new Date(data[0].created_at).getTime()) / 60000 > 300) {
       await con.end();
-      return res.status(400).send({ msg: 'Invalid change password request. Please try again2' });
+      return res.status(400).send({ err: 'Invalid change password request. Please try again' });
     }
 
     const hashedPassword = bcrypt.hashSync(req.body.password, 10);
@@ -173,7 +172,7 @@ router.post('/new-password', validation(newPasswordSchema), async (req, res) => 
 
     if (!changeResponse.affectedRows) {
       await con.end();
-      return res.status(500).send({ msg: 'Server issue occured. Please try again later' });
+      return res.status(500).send({ err: 'Server issue occured. Please try again later' });
     }
 
     await con.execute(`
