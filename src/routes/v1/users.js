@@ -13,7 +13,7 @@ const {
   changePasswordSchema,
   resetPasswordSchema,
   newPasswordSchema,
-} = require('../../middleware/validationSchemas/authVerification');
+} = require('../../middleware/Modules/authSchemas');
 
 const router = express.Router();
 
@@ -71,7 +71,7 @@ router.post('/change-password', isLoggedIn, validation(changePasswordSchema), as
     const con = await mySQL.createConnection(mySQLConfig);
     const [data] = await con.execute(`
     SELECT  password
-    FROM users WHERE id = ${mySQL.escape(req.user.accountId)}
+    FROM users WHERE email = ${mySQL.escape(req.user.accountId)}
     LIMIT 1
     `);
 
@@ -182,7 +182,7 @@ router.post('/new-password', validation(newPasswordSchema), async (req, res) => 
     `);
 
     await con.end();
-    return res.send({ msg: 'Password changed request completed' });
+    return res.send({ msg: 'Password changed succesfully' });
   } catch (err) {
     console.log(err);
     return res.status(500).send({ msg: 'Server issue occured. Please try again later' });

@@ -10,7 +10,8 @@
   },
   "rules": {
     "newline-per-chained-call": "off",
-    "max-len": 1,
-    "camelcase": "warn"
+    "max-len": 0,
+    "camelcase": "warn",
+    "object-curly-newline": "warn"
   }
 }
