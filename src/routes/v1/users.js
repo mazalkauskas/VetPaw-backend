@@ -103,7 +103,7 @@ router.post('/reset-password', validation(resetPasswordSchema), async (req, res)
 
     if (data1.length !== 1) {
       await con.end();
-      return res.send({ msg: 'If your email is correct, you will shortly get a email' });
+      return res.send({ msg: 'If your email is correct, you will shortly get an email.' });
     }
 
     const randomCode = passwordGenerator.generate({
