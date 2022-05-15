@@ -3,17 +3,17 @@ const mySQL = require('mysql2/promise');
 const isLoggedIn = require('../../middleware/auth');
 const validation = require('../../middleware/validation');
 const { mySQLConfig } = require('../../config');
-const { logGetSchema, logPostSchema } = require('../../middleware/Modules/logSchemas');
+const { logPostSchema } = require('../../middleware/Modules/contentSchemas');
 
 const router = express.Router();
 
-router.get('/', isLoggedIn, validation(logGetSchema), async (req, res) => {
+router.get('/', isLoggedIn, async (req, res) => {
   try {
     const con = await mySQL.createConnection(mySQLConfig);
     const [data] = await con.execute(`
-    SELECT name,animal,breed,date_of_birth, FROM pets
+    SELECT pet_name, description, visit_type FROM pets
     JOIN logs ON (pets.id=logs.pet_id)
-    WHERE owner_email = '${req.body.owner_email}'
+    WHERE pet_id = ${mySQL.escape(req.body.pet_id)}
     `);
 
     return res.send(data);
@@ -27,11 +27,11 @@ router.post('/', isLoggedIn, validation(logPostSchema), async (req, res) => {
   try {
     const con = await mySQL.createConnection(mySQLConfig);
     const [data] = await con.execute(`
-          INSERT INTO logs (pet_id, description, status)
+          INSERT INTO logs (pet_id, description, visit_type)
           VALUES (
           ${mySQL.escape(req.body.pet_id)},
           ${mySQL.escape(req.body.description)},
-          ${mySQL.escape(req.body.status)}
+          ${mySQL.escape(req.body.visit_type)}
           )`);
 
     if (!data.insertId) {

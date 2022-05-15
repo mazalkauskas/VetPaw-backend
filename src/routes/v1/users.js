@@ -70,8 +70,8 @@ router.post('/change-password', isLoggedIn, validation(changePasswordSchema), as
   try {
     const con = await mySQL.createConnection(mySQLConfig);
     const [data] = await con.execute(`
-    SELECT  password
-    FROM users WHERE email = ${mySQL.escape(req.user.accountId)}
+    SELECT password
+    FROM users WHERE id = ${mySQL.escape(req.user.accountId)}
     LIMIT 1
     `);
 

@@ -3,17 +3,15 @@ const mySQL = require('mysql2/promise');
 const isLoggedIn = require('../../middleware/auth');
 const validation = require('../../middleware/validation');
 const { mySQLConfig } = require('../../config');
-const { petGetSchema, petPostSchema } = require('../../middleware/Modules/petSchemas');
+const { petPostSchema } = require('../../middleware/Modules/contentSchemas');
 
 const router = express.Router();
 
-router.get('/', isLoggedIn, validation(petGetSchema), async (req, res) => {
+router.get('/', isLoggedIn, async (req, res) => {
   try {
     const con = await mySQL.createConnection(mySQLConfig);
     const [data] = await con.execute(`
-    SELECT id, name, owner_email, animal, breed, date_of_birth FROM pets
-    WHERE owner_email = ${mySQL.escape(req.body.owner_email)}
-    AND archived = 0
+    SELECT * FROM pets WHERE archived != 1
     `);
 
     await con.end();
@@ -28,9 +26,9 @@ router.post('/', isLoggedIn, validation(petPostSchema), async (req, res) => {
   try {
     const con = await mySQL.createConnection(mySQLConfig);
     const [data] = await con.execute(`
-    INSERT INTO pets (name, owner_email, animal, breed, date_of_birth)
+    INSERT INTO pets (pet_name, owner_email, animal, breed, date_of_birth)
     VALUES (
-    ${mySQL.escape(req.body.name)},
+    ${mySQL.escape(req.body.pet_name)},
     ${mySQL.escape(req.body.owner_email)},
     ${mySQL.escape(req.body.animal)},
     ${mySQL.escape(req.body.breed)},
@@ -43,6 +41,21 @@ router.post('/', isLoggedIn, validation(petPostSchema), async (req, res) => {
 
     await con.end();
     return res.send({ msg: 'Succesfully added a pet' });
+  } catch (err) {
+    console.log(err);
+    return res.status(500).send({ err: 'Server issue occured. Please try again later' });
+  }
+});
+
+router.post('/delete', async (req, res) => {
+  try {
+    const con = await mySQL.createConnection(mySQLConfig);
+    await con.execute(`
+     UPDATE pets SET archived = 1 WHERE id = ${req.body.id}
+     `);
+
+    await con.end();
+    return res.send({ msg: 'Pet was removed' });
   } catch (err) {
     console.log(err);
     return res.status(500).send({ err: 'Server issue occured. Please try again later' });

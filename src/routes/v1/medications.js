@@ -3,7 +3,7 @@ const mySQL = require('mysql2/promise');
 const isLoggedIn = require('../../middleware/auth');
 const validation = require('../../middleware/validation');
 const { mySQLConfig } = require('../../config');
-const { medPostSchema } = require('../../middleware/Modules/medSchemas');
+const { medPostSchema } = require('../../middleware/Modules/contentSchemas');
 
 const router = express.Router();
 
