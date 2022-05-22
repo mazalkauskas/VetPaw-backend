@@ -14,14 +14,14 @@ https://github.com/mazalkauskas/VetPaw-frontend.git
 
 ### Installation
 
-Install dependencies
+**Install dependencies**
 
-npm install
+_npm install_
 
 ### Run the app
 
-Start app locally
+**Start app locally**
 
-npm run dev
+_npm run dev_
 
 </div>
