@@ -1,4 +1,4 @@
-<div style="text-align:center">
+<p align="center">
 
 # VetPaw app back-End
 
@@ -24,4 +24,4 @@ Start app locally
 
 npm run dev
 
-</div>
+</p>
