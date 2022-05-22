@@ -1,8 +1,21 @@
-# VetPaw-backEnd
+# VetPaw app back-End
 
-Back-end client for veterinary medicine solution app
+This is a back-end client for a veterinary solution app 🩺. In this app, you can create accounts 🛠, log in, change, reset passwords, create/delete pets 🐈‍ and add logs 📃, prescriptions💊 to the pet.
 
-🛠 App front-end is still under development 🛠 <br>
-📌 Logs.js can still be adjusted according front-end 📌 <br>
+<br/>
 
-⏱ Front-end expected finish date: 2022/05/22 ⏱ <br>
+## 🖥️ Front-end repository 🖥️ : https://github.com/mazalkauskas/VetPaw-frontend.git
+
+## :gear: Getting Started :gear:
+
+### Installation
+
+Install dependencies
+
+npm install
+
+### Run the app
+
+Start app locally
+
+npm run dev
