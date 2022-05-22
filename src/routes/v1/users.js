@@ -33,7 +33,6 @@ router.post('/register', validation(registerSchema), async (req, res) => {
 
     return res.send({ msg: 'Succesfully created account', accountId: data.insertId });
   } catch (err) {
-    console.log(err);
     return res.status(500).send({ err: 'Server issue occured. Please try again later' });
   }
 });
@@ -61,7 +60,6 @@ router.post('/login', validation(loginSchema), async (req, res) => {
 
     return res.send({ msg: 'Succesfully logged in', token });
   } catch (err) {
-    console.log(err);
     return res.status(500).send({ err: 'Server issue occured. Please try again later' });
   }
 });
@@ -91,7 +89,6 @@ router.post('/change-password', isLoggedIn, validation(changePasswordSchema), as
 
     return res.send({ msg: 'Password changed' });
   } catch (err) {
-    console.log(err);
     return res.status(500).send({ err: 'Server issue occured. Please try again later' });
   }
 });
@@ -140,7 +137,6 @@ router.post('/reset-password', validation(resetPasswordSchema), async (req, res)
 
     return res.send({ msg: 'If your email is correct, you will shortly get a message' });
   } catch (err) {
-    console.log(err);
     return res.status(500).send({ msg: 'Server issue occured. Please try again later' });
   }
 });
@@ -183,7 +179,6 @@ router.post('/new-password', validation(newPasswordSchema), async (req, res) => 
     await con.end();
     return res.send({ msg: 'Password changed succesfully' });
   } catch (err) {
-    console.log(err);
     return res.status(500).send({ msg: 'Server issue occured. Please try again later' });
   }
 });

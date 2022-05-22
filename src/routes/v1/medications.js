@@ -15,7 +15,6 @@ router.get('/', isLoggedIn, async (req, res) => {
 
     return res.send(data);
   } catch (err) {
-    console.log(err);
     return res.status(500).send({ err: 'Server issue occured. Please try again later' });
   }
 });
@@ -37,7 +36,6 @@ router.post('/', isLoggedIn, validation(medPostSchema), async (req, res) => {
     await con.end();
     return res.send({ msg: 'Succesfully added a medicine' });
   } catch (err) {
-    console.log(err);
     return res.status(500).send({ err: 'Server issue occured. Please try again later' });
   }
 });

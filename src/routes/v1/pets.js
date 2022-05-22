@@ -17,7 +17,6 @@ router.get('/', isLoggedIn, async (req, res) => {
     await con.end();
     return res.send(data);
   } catch (err) {
-    console.log(err);
     return res.status(500).send({ err: 'Server issue occured. Please try again later' });
   }
 });
@@ -42,7 +41,6 @@ router.post('/', isLoggedIn, validation(petPostSchema), async (req, res) => {
     await con.end();
     return res.send({ msg: 'Succesfully added a pet' });
   } catch (err) {
-    console.log(err);
     return res.status(500).send({ err: 'Server issue occured. Please try again later' });
   }
 });
@@ -57,7 +55,6 @@ router.post('/delete', async (req, res) => {
     await con.end();
     return res.send({ msg: 'Pet was removed' });
   } catch (err) {
-    console.log(err);
     return res.status(500).send({ err: 'Server issue occured. Please try again later' });
   }
 });

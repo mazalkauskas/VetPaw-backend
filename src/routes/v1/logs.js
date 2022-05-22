@@ -7,18 +7,17 @@ const { logPostSchema } = require('../../middleware/Modules/contentSchemas');
 
 const router = express.Router();
 
-router.get('/', isLoggedIn, async (req, res) => {
+router.get('/:pet_id', isLoggedIn, async (req, res) => {
   try {
     const con = await mySQL.createConnection(mySQLConfig);
     const [data] = await con.execute(`
-    SELECT pet_name, description, visit_type FROM pets
+    SELECT * FROM pets
     JOIN logs ON (pets.id=logs.pet_id)
-    WHERE pet_id = ${mySQL.escape(req.body.pet_id)}
+    WHERE pet_id = ${req.params.pet_id}
     `);
 
     return res.send(data);
   } catch (err) {
-    console.log(err);
     return res.status(500).send({ err: 'Server issue occured. Please try again later' });
   }
 });
@@ -41,7 +40,6 @@ router.post('/', isLoggedIn, validation(logPostSchema), async (req, res) => {
     await con.end();
     return res.send({ msg: 'Successfully created an entry' });
   } catch (err) {
-    console.log(err);
     return res.status(500).send({ err: 'Server issue occured. Please try again later' });
   }
 });

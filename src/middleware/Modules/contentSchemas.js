@@ -10,13 +10,13 @@ const petPostSchema = Joi.object({
 
 const logPostSchema = Joi.object({
   pet_id: Joi.number().required(),
-  description: Joi.string().lowercase().trim().required(),
-  status: Joi.string().lowercase().trim().required(),
+  description: Joi.string().trim().required(),
+  visit_type: Joi.string().lowercase().trim().required(),
 });
 
 const medPostSchema = Joi.object({
-  med_name: Joi.string().lowercase().trim().required(),
-  description: Joi.string().lowercase().trim().required(),
+  med_name: Joi.string().trim().required(),
+  description: Joi.string().trim().required(),
 });
 
 const prescriptionPostSchema = Joi.object({

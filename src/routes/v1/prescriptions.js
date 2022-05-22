@@ -7,19 +7,18 @@ const { prescriptionPostSchema } = require('../../middleware/Modules/contentSche
 
 const router = express.Router();
 
-router.get('/', isLoggedIn, async (req, res) => {
+router.get('/:pet_id', isLoggedIn, async (req, res) => {
   try {
     const con = await mySQL.createConnection(mySQLConfig);
     const [data] = await con.execute(`
-    SELECT pet_name,animal,breed,date_of_birth,med_name,description,comment FROM prescriptions
+    SELECT * FROM prescriptions
     JOIN pets ON (prescriptions.pet_id=pets.id)
     JOIN medications ON (prescriptions.med_id=medications.med_id)
-    WHERE pet_id = ${mySQL.escape(req.body.pet_id)}
+    WHERE pet_id = ${req.params.pet_id}
     `);
 
     return res.send(data);
   } catch (err) {
-    console.log(err);
     return res.status(500).send({ err: 'Server issue occured. Please try again later' });
   }
 });
@@ -42,7 +41,6 @@ router.post('/', isLoggedIn, validation(prescriptionPostSchema), async (req, res
     await con.end();
     return res.send({ msg: 'Successfully appointed a prescription' });
   } catch (err) {
-    console.log(err);
     return res.status(500).send({ err: 'Server issue occured. Please try again later' });
   }
 });
